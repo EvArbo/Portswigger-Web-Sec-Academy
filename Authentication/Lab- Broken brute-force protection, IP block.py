@@ -1,6 +1,6 @@
 import requests
 
-login_url = 'https://0a9c00f403f5c06481c757ce00320008.web-security-academy.net/login'
+login_url = 'https://0a9400f004882fff8b021844007e0098.web-security-academy.net/login'
 
 username = 'carlos'
 
